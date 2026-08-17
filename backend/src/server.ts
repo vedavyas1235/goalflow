@@ -18,9 +18,15 @@ import aiRoutes from './routes/ai';
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'GoalFlow API is running on Vercel!' });
 });
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', message: 'GoalFlow API is running on Vercel!' });
+});
 
 // Root route
 app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', name: 'GoalFlow Backend API', version: '1.0.0' });
+});
+app.get('/api', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', name: 'GoalFlow Backend API', version: '1.0.0' });
 });
 
