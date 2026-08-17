@@ -96,6 +96,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(email.trim());
+  }
+
   Widget _buildFieldTile({
     required String label,
     required TextEditingController controller,
@@ -189,6 +193,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       focusedBorder: InputBorder.none,
                       errorBorder: InputBorder.none,
                       focusedErrorBorder: InputBorder.none,
+                      errorStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFEF4444),
+                        height: 1.2,
+                      ),
                       hintText: 'Enter your ${label.toLowerCase()}',
                       hintStyle: const TextStyle(
                         fontSize: 14,
@@ -361,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               keyboardType: TextInputType.emailAddress,
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) return 'Email is required';
-                                if (!val.contains('@')) return 'Enter a valid email';
+                                if (!_isValidEmail(val)) return 'Please enter a valid email address';
                                 return null;
                               },
                             ),
