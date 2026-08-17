@@ -173,8 +173,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOutCubic,
       );
     } else {
-      // Pass data to the AI screen
-      context.go('/ai-generation', extra: {
+      // Pass data to the Welcome screen
+      context.go('/welcome', extra: {
         'name': _nameController.text.trim(),
         'mainObjective': _mainObjectiveController.text.trim(),
         'goalTitle': _firstGoalTitleController.text.trim(),

@@ -26,7 +26,7 @@ void main() async {
   final initialThemeMode = savedIsDark ? ThemeMode.dark : ThemeMode.light;
 
   // Decide initial route synchronously — no async inside GoRouter needed
-  String initialRoute = hasSession ? '/home' : '/register';
+  String initialRoute = hasSession ? '/home' : '/splash';
 
   runApp(
     MultiProvider(

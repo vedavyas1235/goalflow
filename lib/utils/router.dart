@@ -67,7 +67,10 @@ GoRouter buildRouter(String initialLocation) {
       ),
       GoRoute(
         path: '/welcome',
-        pageBuilder: (context, state) => _buildSmoothPage(context, state, const WelcomeSplashScreen()),
+        pageBuilder: (context, state) {
+          final extraData = state.extra as Map<String, dynamic>? ?? {};
+          return _buildSmoothPage(context, state, WelcomeSplashScreen(onboardingData: extraData));
+        },
       ),
       GoRoute(
         path: '/ai-generation',

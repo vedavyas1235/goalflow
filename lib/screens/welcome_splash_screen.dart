@@ -5,7 +5,8 @@ import 'package:goalflow/widgets/ambient_watercolor_background.dart';
 import 'package:goalflow/theme/app_theme.dart';
 
 class WelcomeSplashScreen extends StatefulWidget {
-  const WelcomeSplashScreen({super.key});
+  final Map<String, dynamic> onboardingData;
+  const WelcomeSplashScreen({super.key, this.onboardingData = const {}});
 
   @override
   State<WelcomeSplashScreen> createState() => _WelcomeSplashScreenState();
@@ -86,93 +87,95 @@ class _WelcomeSplashScreenState extends State<WelcomeSplashScreen> with TickerPr
         child: Scaffold(
           backgroundColor: Colors.white,
           body: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              context.go('/ai-generation', extra: widget.onboardingData);
+            },
             onHorizontalDragEnd: (details) {
-              if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
-                context.go('/ai-generation');
-              }
+              context.go('/ai-generation', extra: widget.onboardingData);
             },
             child: AmbientWatercolorBackground(
               child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SlideTransition(
-                  position: _slideWelcomeAnimation,
-                  child: Row(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_fullWelcome.length, (index) {
-                      return FadeTransition(
-                        opacity: _letterFades[index],
-                        child: Text(
-                          _fullWelcome[index],
-                          style: TextStyle(
-                            fontFamily: 'cursive',
-                            fontStyle: FontStyle.italic,
-                            fontSize: 70,
-                            fontWeight: FontWeight.w700,
-                            color: textColor,
-                            height: 1.0,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SlideTransition(
+                        position: _slideWelcomeAnimation,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(_fullWelcome.length, (index) {
+                            return FadeTransition(
+                              opacity: _letterFades[index],
+                              child: Text(
+                                _fullWelcome[index],
+                                style: const TextStyle(
+                                  fontFamily: 'cursive',
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 70,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                  height: 1.0,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      SlideTransition(
+                        position: _slideSubtextAnimation,
+                        child: FadeTransition(
+                          opacity: _fadeSubtextAnimation,
+                          child: Text(
+                            'Your journey starts now. Let AI craft the perfect plan for you.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: textColor.withOpacity(0.75),
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                      );
-                    }),
-                  ),
-                ),
-                
-                const SizedBox(height: 32),
-                
-                SlideTransition(
-                  position: _slideSubtextAnimation,
-                  child: FadeTransition(
-                    opacity: _fadeSubtextAnimation,
-                    child: Text(
-                      'Your journey starts now. Let AI craft the perfect plan for you.',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: textColor.withOpacity(0.75),
-                        height: 1.5,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 56),
-                
-                FadeTransition(
-                  opacity: _fadeButtonAnimation,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Swipe to reveal your plan',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: textColor.withOpacity(0.5),
-                          letterSpacing: 0.5,
+                      
+                      const SizedBox(height: 56),
+                      
+                      FadeTransition(
+                        opacity: _fadeButtonAnimation,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Swipe or tap to reveal your plan',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: textColor.withOpacity(0.5),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.keyboard_double_arrow_right_rounded,
+                              size: 20,
+                              color: textColor.withOpacity(0.5),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.keyboard_double_arrow_right_rounded,
-                        size: 20,
-                        color: textColor.withOpacity(0.5),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-      ),
-      ),
       ),
     );
   }
