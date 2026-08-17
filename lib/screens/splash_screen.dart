@@ -85,11 +85,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   void _proceed() {
     if (_hasNavigated) return;
     _hasNavigated = true;
-    if (ApiService.currentUserId != null) {
-      context.go('/home');
-    } else {
-      context.go('/register');
-    }
+    context.go('/onboarding');
   }
 
   @override
@@ -230,20 +226,20 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 onTap: _proceed,
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 18),
-                                  child: Row(
+                                  child: const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        isLoggedIn ? 'Enter Dashboard' : 'Get Started',
-                                        style: const TextStyle(
+                                        'Continue',
+                                        style: TextStyle(
                                           fontSize: 17,
                                           fontWeight: FontWeight.w700,
                                           color: Colors.white,
                                           letterSpacing: 0.3,
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      const Icon(
+                                      SizedBox(width: 8),
+                                      Icon(
                                         Icons.arrow_forward_rounded,
                                         size: 18,
                                         color: Colors.white,

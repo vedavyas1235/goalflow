@@ -25,8 +25,8 @@ void main() async {
   final savedIsDark = prefs.getBool('user_theme_mode') ?? false;
   final initialThemeMode = savedIsDark ? ThemeMode.dark : ThemeMode.light;
 
-  // Always start at /splash so the user sees the animated 'hello' on cold boot
-  String initialRoute = '/splash';
+  // Startup: If session exists -> /home, else -> /register (Hello screen comes after signup)
+  String initialRoute = hasSession ? '/home' : '/register';
 
   runApp(
     MultiProvider(

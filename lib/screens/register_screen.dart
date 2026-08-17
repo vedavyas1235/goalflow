@@ -41,7 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = false);
       
       if (errorMsg == null && mounted) {
-        context.go('/onboarding');
+        context.go('/splash');
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
