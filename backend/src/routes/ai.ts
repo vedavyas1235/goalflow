@@ -506,15 +506,35 @@ Output MUST be strict JSON ONLY with NO markdown formatting:
       const startIndex = rawAiText.indexOf('{');
       const endIndex = rawAiText.lastIndexOf('}');
       if (startIndex !== -1 && endIndex !== -1) {
-        const parsed = JSON.parse(rawAiText.substring(startIndex, endIndex + 1));
-        summaryText = parsed.summary || rawAiText;
-      } else {
-        const parsed = JSON.parse(rawAiText);
-        summaryText = parsed.summary || rawAiText;
+        const jsonBlock = rawAiText.substring(startIndex, endIndex + 1);
+        try {
+          const parsed = JSON.parse(jsonBlock);
+          if (parsed && parsed.summary) summaryText = parsed.summary;
+        } catch (_) {
+          const match = jsonBlock.match(/"summary"\s*:\s*"([\s\S]*?)"\s*}/);
+          if (match && match[1]) {
+            summaryText = match[1];
+          }
+        }
       }
-    } catch (_) {
-      summaryText = rawAiText.replace(/^```json\s*/, '').replace(/```$/, '').trim();
+    } catch (_) {}
+
+    if (!summaryText) {
+      summaryText = rawAiText
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```$/i, '')
+        .replace(/^\s*{\s*"summary"\s*:\s*"/i, '')
+        .replace(/"\s*}\s*$/i, '')
+        .trim();
     }
+
+    // Clean up escaped newlines or quotes
+    summaryText = summaryText
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .replace(/^"|"$/g, '')
+      .trim();
 
     res.status(200).json({ success: true, summary: summaryText });
   } catch (error: any) {

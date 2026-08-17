@@ -219,17 +219,56 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                           print('synthesizeReflection error: $e');
                         }
 
+                        // Helper function to extract and clean pure text
+                        String cleanSummaryText(String raw) {
+                          String text = raw.trim();
+                          text = text
+                              .replaceAll(RegExp(r'```json\s*', caseSensitive: false), '')
+                              .replaceAll(RegExp(r'```\s*'), '')
+                              .trim();
+
+                          if ((text.startsWith('{') && text.contains('summary')) || text.contains('"summary"') || text.contains(r'\"summary\"')) {
+                            try {
+                              final startIndex = text.indexOf('{');
+                              final endIndex = text.lastIndexOf('}');
+                              if (startIndex != -1 && endIndex != -1) {
+                                final jsonSub = text.substring(startIndex, endIndex + 1);
+                                final Map<String, dynamic> parsed = json.decode(jsonSub);
+                                if (parsed.containsKey('summary') && parsed['summary'] != null) {
+                                  text = parsed['summary'].toString();
+                                }
+                              }
+                            } catch (_) {
+                              final match = RegExp(r'\\?"summary\\?"\s*:\s*\\?"([\s\S]*?)\\?"(?:\s*\}|$)').firstMatch(text);
+                              if (match != null && match.group(1) != null) {
+                                text = match.group(1)!;
+                              }
+                            }
+                          }
+
+                          text = text
+                              .replaceAll(r'\n', '\n')
+                              .replaceAll(r'\"', '"')
+                              .replaceAll(r'\\', '')
+                              .trim();
+
+                          if (text.startsWith('"') && text.endsWith('"') && text.length > 2) {
+                            text = text.substring(1, text.length - 1).trim();
+                          }
+                          if (text.startsWith('{') && text.endsWith('}') && text.length > 2) {
+                            text = text.replaceAll(RegExp(r'^\s*\{\s*|\s*\}\s*$'), '').trim();
+                          }
+                          if (text.startsWith('"summary":')) {
+                            text = text.replaceFirst(RegExp(r'^\s*"summary"\s*:\s*"?'), '').replaceFirst(RegExp(r'"?\s*\}?\s*$'), '').trim();
+                          }
+
+                          return text;
+                        }
+
                         // Clean and extract pure synthesized AI text
                         String finalSummary = (aiSummary != null && aiSummary.trim().isNotEmpty)
-                            ? aiSummary.trim()
+                            ? cleanSummaryText(aiSummary)
                             : "You showed great commitment this week by reflecting on your progress. Continue building your daily habit rhythm and stay focused on your goals.\n\nNext week, allocate dedicated time in your schedule to execute your key actions smoothly and maintain your learning momentum.";
-
-                        finalSummary = finalSummary
-                            .replaceAll(r'\n', '\n')
-                            .replaceAll(r'\"', '"')
-                            .replaceAll('```json', '')
-                            .replaceAll('```', '')
-                            .trim();
 
                         // Save real AI synthesized reflection to SharedPreferences
                         try {
@@ -237,23 +276,37 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                           final existingJson = prefs.getString('saved_journey_reflections');
                           List<dynamic> list = existingJson != null ? json.decode(existingJson) : [];
                           
-                          // Discard any raw non-AI legacy entries
-                          list.removeWhere((item) {
-                            final s = item['summary']?.toString() ?? '';
-                            return s.contains('Progress & Momentum:') || 
-                                   s.contains('Obstacles Encountered:') || 
-                                   s.contains('Focus Strategy for Next Week:') ||
-                                   s.trim().isEmpty;
-                          });
+                          // Clean existing list and remove any duplicates or raw scripts
+                          final List<Map<String, dynamic>> cleanedList = [];
+                          final normalizedNew = finalSummary.replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase();
+
+                          for (var item in list) {
+                            final s = cleanSummaryText(item['summary']?.toString() ?? '');
+                            if (s.isEmpty || 
+                                s.contains('Progress & Momentum:') || 
+                                s.contains('Obstacles Encountered:') || 
+                                s.contains('Focus Strategy for Next Week:') ||
+                                (s.startsWith('{') && s.contains('"summary"'))) {
+                              continue;
+                            }
+                            final norm = s.replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase();
+                            if (norm != normalizedNew && !cleanedList.any((e) => (e['summary']?.toString() ?? '').replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase() == norm)) {
+                              cleanedList.add({
+                                'date': item['date']?.toString() ?? 'Weekly Reflection',
+                                'summary': s,
+                                'monthIndex': 0,
+                              });
+                            }
+                          }
 
                           final now = DateTime.now();
-                          final dateStr = 'Week ${list.length + 1} • ${now.day}/${now.month}/${now.year}';
-                          list.insert(0, {
+                          final dateStr = 'Week ${cleanedList.length + 1} • ${now.day}/${now.month}/${now.year}';
+                          cleanedList.insert(0, {
                             'date': dateStr,
                             'summary': finalSummary,
                             'monthIndex': 0,
                           });
-                          await prefs.setString('saved_journey_reflections', json.encode(list));
+                          await prefs.setString('saved_journey_reflections', json.encode(cleanedList));
                         } catch (e) {
                           print('Error saving reflection: $e');
                         }

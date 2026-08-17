@@ -23,6 +23,56 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
     _loadRealLogs();
   }
 
+  String _cleanSummaryText(String raw) {
+    String text = raw.trim();
+
+    // Strip markdown code blocks
+    text = text
+        .replaceAll(RegExp(r'```json\s*', caseSensitive: false), '')
+        .replaceAll(RegExp(r'```\s*'), '')
+        .trim();
+
+    // If JSON object format, decode it or extract the summary field
+    if ((text.startsWith('{') && text.contains('summary')) || text.contains('"summary"') || text.contains(r'\"summary\"')) {
+      try {
+        final startIndex = text.indexOf('{');
+        final endIndex = text.lastIndexOf('}');
+        if (startIndex != -1 && endIndex != -1) {
+          final jsonSub = text.substring(startIndex, endIndex + 1);
+          final Map<String, dynamic> parsed = json.decode(jsonSub);
+          if (parsed.containsKey('summary') && parsed['summary'] != null) {
+            text = parsed['summary'].toString();
+          }
+        }
+      } catch (_) {
+        // Regex fallback to extract value of "summary": "..."
+        final match = RegExp(r'\\?"summary\\?"\s*:\s*\\?"([\s\S]*?)\\?"(?:\s*\}|$)').firstMatch(text);
+        if (match != null && match.group(1) != null) {
+          text = match.group(1)!;
+        }
+      }
+    }
+
+    // Clean up escaped newlines, quotes, and slashes
+    text = text
+        .replaceAll(r'\n', '\n')
+        .replaceAll(r'\"', '"')
+        .replaceAll(r'\\', '')
+        .trim();
+
+    if (text.startsWith('"') && text.endsWith('"') && text.length > 2) {
+      text = text.substring(1, text.length - 1).trim();
+    }
+    if (text.startsWith('{') && text.endsWith('}') && text.length > 2) {
+      text = text.replaceAll(RegExp(r'^\s*\{\s*|\s*\}\s*$'), '').trim();
+    }
+    if (text.startsWith('"summary":')) {
+      text = text.replaceFirst(RegExp(r'^\s*"summary"\s*:\s*"?'), '').replaceFirst(RegExp(r'"?\s*\}?\s*$'), '').trim();
+    }
+
+    return text;
+  }
+
   Future<void> _loadRealLogs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -32,36 +82,37 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
         final List<Map<String, String>> cleanedList = [];
 
         for (var item in raw) {
-          String summary = item['summary']?.toString() ?? '';
-          
-          // Unescape newlines and quotes
-          summary = summary.replaceAll(r'\n', '\n').replaceAll(r'\"', '"').trim();
+          String summary = _cleanSummaryText(item['summary']?.toString() ?? '');
 
-          // If JSON object format leaked, extract the inner summary
-          if (summary.startsWith('{') && summary.contains('"summary"')) {
-            try {
-              final parsed = json.decode(summary);
-              if (parsed is Map && parsed['summary'] != null) {
-                summary = parsed['summary'].toString().trim();
-              }
-            } catch (_) {}
-          }
-
-          // Completely discard any raw questionnaire fallbacks or non-AI drafts
-          if (summary.contains('Progress & Momentum:') || 
+          // Completely discard any raw questionnaire fallbacks, scripts, or empty summaries
+          if (summary.isEmpty ||
+              summary.contains('Progress & Momentum:') || 
               summary.contains('Obstacles Encountered:') || 
               summary.contains('Focus Strategy for Next Week:') ||
-              summary.isEmpty) {
-            continue; // Skip and remove raw unsummarized legacy entries!
+              (summary.startsWith('{') && summary.contains('"summary"'))) {
+            continue;
           }
 
-          cleanedList.add({
-            'date': item['date']?.toString() ?? 'Weekly Reflection',
-            'summary': summary,
+          // Normalize text to check for duplicates
+          final normalized = summary.replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase();
+
+          // Deduplicate: If an entry with this text already exists, discard duplicate!
+          final alreadyExists = cleanedList.any((existing) {
+            final existingNorm = existing['summary']!.replaceAll(RegExp(r'\s+'), ' ').trim().toLowerCase();
+            return existingNorm == normalized || 
+                   existingNorm.contains(normalized) || 
+                   normalized.contains(existingNorm);
           });
+
+          if (!alreadyExists) {
+            cleanedList.add({
+              'date': item['date']?.toString() ?? 'Weekly Reflection',
+              'summary': summary,
+            });
+          }
         }
 
-        // Re-index week numbers cleanly (e.g. Week 1, Week 2...) based on genuine AI summaries
+        // Re-index week numbers cleanly (e.g. Week 1, Week 2...) based on genuine unique AI summaries
         for (int i = 0; i < cleanedList.length; i++) {
           final int weekNum = cleanedList.length - i;
           final datePart = cleanedList[i]['date']!.split('•').last.trim();
@@ -70,7 +121,7 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
 
         _realLogs = cleanedList;
         
-        // Save cleaned list back to SharedPreferences so raw entries are permanently purged
+        // Save cleaned list back to SharedPreferences so raw entries and duplicates are permanently purged
         final updatedJsonList = _realLogs.map((log) => {
           'date': log['date'],
           'summary': log['summary'],
