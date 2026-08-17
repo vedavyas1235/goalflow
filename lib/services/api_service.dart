@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:goalflow/models/goal.dart';
 
 class ApiService {
-  // Use your computer's Wi-Fi IP so the physical phone can connect
-  static const String baseUrl = 'http://192.168.1.7:3000/api';
+  // Live Cloud Production URL on Vercel
+  static const String baseUrl = 'https://goalflow-opal.vercel.app/api';
 
   static String? currentUserId;
   static Map<String, dynamic>? currentUserData;
