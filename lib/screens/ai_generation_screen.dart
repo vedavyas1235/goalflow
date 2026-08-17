@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:goalflow/widgets/ambient_watercolor_background.dart';
 import 'package:goalflow/services/api_service.dart';
+import 'package:goalflow/services/goal_provider.dart';
 import 'package:goalflow/theme/app_theme.dart';
 
 class AiGenerationScreen extends StatefulWidget {
@@ -138,16 +140,19 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
     super.dispose();
   }
 
-  void _nextPage() {
+  void _nextPage() async {
     if (_currentIndex < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 450),
         curve: Curves.easeInOutCubic,
       );
     } else {
-      ApiService.setOnboardingCompleted(true);
-      ApiService.clearOnboardingDraft();
-      context.go('/home');
+      await ApiService.setOnboardingCompleted(true);
+      await ApiService.clearOnboardingDraft();
+      if (mounted) {
+        Provider.of<GoalProvider>(context, listen: false).fetchGoals();
+        context.go('/home');
+      }
     }
   }
 
@@ -241,6 +246,7 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
                               await ApiService.setOnboardingCompleted(true);
                               await ApiService.clearOnboardingDraft();
                               if (context.mounted) {
+                                Provider.of<GoalProvider>(context, listen: false).fetchGoals();
                                 context.go('/home');
                               }
                             } else {
