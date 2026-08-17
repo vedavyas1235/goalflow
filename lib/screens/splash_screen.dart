@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:goalflow/widgets/ambient_watercolor_background.dart';
 import 'package:goalflow/theme/app_theme.dart';
+import 'package:goalflow/services/api_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,6 +24,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   final List<double> _letterOpacities = [0.0, 0.0, 0.0, 0.0, 0.0];
   final String _fullHello = 'hello';
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -30,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     _uiController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2500),
+      duration: const Duration(milliseconds: 2000),
     );
 
     _slideHelloAnimation = Tween<Offset>(begin: const Offset(0, 1.2), end: const Offset(0, 0)).animate(
@@ -53,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 
   void _startSequence() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 400));
     
     for (int i = 0; i < _fullHello.length; i++) {
       if (mounted) {
@@ -61,13 +63,32 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
           _letterOpacities[i] = 1.0;
         });
       }
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 250));
     }
     
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 400));
     
     if (mounted) {
       _uiController.forward();
+
+      // If user is already logged in, auto-transition smoothly to /home
+      if (ApiService.currentUserId != null) {
+        Future.delayed(const Duration(milliseconds: 2500), () {
+          if (mounted && !_hasNavigated) {
+            _proceed();
+          }
+        });
+      }
+    }
+  }
+
+  void _proceed() {
+    if (_hasNavigated) return;
+    _hasNavigated = true;
+    if (ApiService.currentUserId != null) {
+      context.go('/home');
+    } else {
+      context.go('/register');
     }
   }
 
@@ -80,6 +101,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     const textColor = Color(0xFF1E293B);
+    final isLoggedIn = ApiService.currentUserId != null;
 
     return Theme(
       data: AppTheme.lightTheme,
@@ -110,9 +132,11 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
           child: Scaffold(
             backgroundColor: Colors.white,
             body: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _proceed,
               onHorizontalDragEnd: (details) {
                 if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
-                  context.go('/register');
+                  _proceed();
                 }
               },
               child: AmbientWatercolorBackground(
@@ -203,23 +227,23 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               color: Colors.transparent,
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(20),
-                                onTap: () => context.go('/register'),
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 18),
+                                onTap: _proceed,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 18),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        'Get Started',
-                                        style: TextStyle(
+                                        isLoggedIn ? 'Enter Dashboard' : 'Get Started',
+                                        style: const TextStyle(
                                           fontSize: 17,
                                           fontWeight: FontWeight.w700,
                                           color: Colors.white,
                                           letterSpacing: 0.3,
                                         ),
                                       ),
-                                      SizedBox(width: 8),
-                                      Icon(
+                                      const SizedBox(width: 8),
+                                      const Icon(
                                         Icons.arrow_forward_rounded,
                                         size: 18,
                                         color: Colors.white,

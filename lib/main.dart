@@ -25,8 +25,8 @@ void main() async {
   final savedIsDark = prefs.getBool('user_theme_mode') ?? false;
   final initialThemeMode = savedIsDark ? ThemeMode.dark : ThemeMode.light;
 
-  // Decide initial route synchronously — no async inside GoRouter needed
-  String initialRoute = hasSession ? '/home' : '/splash';
+  // Always start at /splash so the user sees the animated 'hello' on cold boot
+  String initialRoute = '/splash';
 
   runApp(
     MultiProvider(

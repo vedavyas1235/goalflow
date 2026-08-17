@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -66,6 +67,16 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
   int _currentIndex = 0;
   bool _isGenerating = true;
   bool _isNavigating = false;
+  int _progressStepIndex = 0;
+  Timer? _progressTimer;
+
+  final List<String> _progressMessages = [
+    'Analyzing your goal & core motivations...',
+    'Evaluating schedule, available time & constraints...',
+    'Synthesizing personalized 3-month milestone blueprint...',
+    'Structuring complete 30-day daily actionable roadmap...',
+    'Finalizing your customized strategy and daily tasks...',
+  ];
 
   String _slide1Text = "";
   String _slide2Text = "";
@@ -74,7 +85,18 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
   @override
   void initState() {
     super.initState();
+    _startProgressTimer();
     _fetchAiData();
+  }
+
+  void _startProgressTimer() {
+    _progressTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (mounted && _isGenerating) {
+        setState(() {
+          _progressStepIndex = (_progressStepIndex + 1) % _progressMessages.length;
+        });
+      }
+    });
   }
   
   Future<void> _fetchAiData() async {
@@ -103,6 +125,7 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
       }
     }
 
+    _progressTimer?.cancel();
     if (mounted) {
       setState(() => _isGenerating = false);
     }
@@ -110,6 +133,7 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
 
   @override
   void dispose() {
+    _progressTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -299,43 +323,56 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
         child: Container(
           padding: const EdgeInsets.all(32.0),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.65),
+            color: Colors.white.withOpacity(0.75),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
+            border: Border.all(color: Colors.white.withOpacity(0.9), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1E293B).withOpacity(0.04),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+                color: const Color(0xFF1E293B).withOpacity(0.06),
+                blurRadius: 28,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: const Column(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: 56,
-                height: 56,
+              const SizedBox(
+                width: 60,
+                height: 60,
                 child: CircularProgressIndicator(
-                  strokeWidth: 3,
+                  strokeWidth: 3.5,
                   color: Color(0xFF1E293B),
                 ),
               ),
-              SizedBox(height: 28),
-              Text(
-                'AI is Analyzing...',
+              const SizedBox(height: 28),
+              const Text(
+                'AI is Crafting Your Plan...',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF1E293B),
+                  letterSpacing: -0.3,
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 10),
-              Text(
-                'Evaluating your strengths, constraints, and crafting a personalized roadmap.',
-                style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.4),
-                textAlign: TextAlign.center,
+              const SizedBox(height: 14),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: Text(
+                  _progressMessages[_progressStepIndex],
+                  key: ValueKey<int>(_progressStepIndex),
+                  style: const TextStyle(
+                    fontSize: 14, 
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF64748B), 
+                    height: 1.5
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ),
