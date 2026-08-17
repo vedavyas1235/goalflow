@@ -4,21 +4,20 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-// Helper to call OpenRouter with multi-model fallback and timeout
+// Helper to call OpenRouter with multi-model fallback and fast timeout
 async function callOpenRouter(prompt: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured");
 
   const models = [
     "google/gemma-2-9b-it:free",
-    "cohere/north-mini-code:free",
-    "meta-llama/llama-3.3-70b-instruct:free"
+    "cohere/north-mini-code:free"
   ];
 
   for (const model of models) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 3800);
 
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -30,7 +29,9 @@ async function callOpenRouter(prompt: string): Promise<string> {
         },
         body: JSON.stringify({
           model: model,
-          messages: [{ role: "user", content: prompt }]
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 1000,
+          temperature: 0.7
         }),
         signal: controller.signal,
       });
