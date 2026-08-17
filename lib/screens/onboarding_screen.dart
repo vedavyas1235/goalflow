@@ -1154,7 +1154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               duration: const Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: isFocused ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0),
                   width: isFocused ? 1.8 : 1.2,
@@ -1206,31 +1206,79 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _detailedDescriptionController,
-                      focusNode: _detailedDescriptionFocusNode,
-                      maxLines: 6,
-                      minLines: 4,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF0F172A),
-                        height: 1.45,
-                      ),
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        border: InputBorder.none,
-                        hintText: 'Share your background, what success looks like, and what drives you to accomplish this milestone...',
-                        hintStyle: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFCBD5E1),
-                          height: 1.4,
+                    const SizedBox(height: 14),
+                    
+                    // Inset Text Area Box to guarantee no cursor clipping
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isFocused ? const Color(0xFFC7D2FE) : const Color(0xFFE2E8F0),
+                          width: 1,
                         ),
                       ),
-                      onChanged: (_) => _saveDraft(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                      child: TextFormField(
+                        controller: _detailedDescriptionController,
+                        focusNode: _detailedDescriptionFocusNode,
+                        maxLines: 12,
+                        minLines: 8,
+                        cursorColor: const Color(0xFF4F46E5),
+                        cursorWidth: 2.0,
+                        cursorRadius: const Radius.circular(2),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF0F172A),
+                          height: 1.5,
+                        ),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          hintText: 'Share your background, what success looks like, and what drives you to accomplish this milestone...\n\nBe as detailed as you like—AI uses every detail to construct your personalized 30-day action plan.',
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF94A3B8),
+                            height: 1.45,
+                          ),
+                        ),
+                        onChanged: (_) {
+                          setState(() {});
+                          _saveDraft();
+                        },
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _detailedDescriptionController.text.trim().isEmpty
+                              ? 'Required field'
+                              : '✓ Looking great',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: _detailedDescriptionController.text.trim().isEmpty
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF10B981),
+                          ),
+                        ),
+                        Text(
+                          '${_detailedDescriptionController.text.length} characters',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1252,7 +1300,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Required: AI uses these details to generate targeted milestones.',
+                      'AI uses these details to generate targeted daily action items.',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
