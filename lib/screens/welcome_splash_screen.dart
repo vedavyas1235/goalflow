@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:goalflow/widgets/ambient_watercolor_background.dart';
+import 'package:goalflow/theme/app_theme.dart';
 
 class WelcomeSplashScreen extends StatefulWidget {
   const WelcomeSplashScreen({super.key});
@@ -71,18 +73,26 @@ class _WelcomeSplashScreenState extends State<WelcomeSplashScreen> with TickerPr
 
   @override
   Widget build(BuildContext context) {
-    final textColor = const Color(0xFF1E293B);
+    const textColor = Color(0xFF1E293B);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
-            context.go('/ai-generation');
-          }
-        },
-        child: AmbientWatercolorBackground(
-          child: SafeArea(
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: GestureDetector(
+            onHorizontalDragEnd: (details) {
+              if (details.primaryVelocity != null && details.primaryVelocity! < 0) {
+                context.go('/ai-generation');
+              }
+            },
+            child: AmbientWatercolorBackground(
+              child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40.0),
             child: Column(
@@ -160,6 +170,8 @@ class _WelcomeSplashScreenState extends State<WelcomeSplashScreen> with TickerPr
             ),
           ),
         ),
+      ),
+      ),
       ),
       ),
     );

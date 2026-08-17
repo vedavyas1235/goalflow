@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:goalflow/widgets/ambient_watercolor_background.dart';
-
 import 'package:goalflow/services/api_service.dart';
+import 'package:goalflow/theme/app_theme.dart';
 
 class AiGenerationScreen extends StatefulWidget {
   final Map<String, dynamic> onboardingData;
@@ -156,28 +157,36 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!_isGenerating && _currentIndex > 0) {
-          _pageController.previousPage(
-            duration: const Duration(milliseconds: 450),
-            curve: Curves.easeInOutCubic,
-          );
-        }
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: AmbientWatercolorBackground(
-          child: SafeArea(
-            child: _isGenerating
-                ? _buildGeneratingState()
-                : Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      // Progress Indicator
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0),
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!_isGenerating && _currentIndex > 0) {
+              _pageController.previousPage(
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeInOutCubic,
+              );
+            }
+          },
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            body: AmbientWatercolorBackground(
+              child: SafeArea(
+                child: _isGenerating
+                    ? _buildGeneratingState()
+                    : Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          // Progress Indicator
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0),
                         child: Row(
                           children: List.generate(
                             3,
@@ -277,6 +286,8 @@ class _AiGenerationScreenState extends State<AiGenerationScreen> {
                   ),
           ),
         ),
+      ),
+      ),
       ),
     );
   }

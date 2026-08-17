@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:goalflow/widgets/ambient_watercolor_background.dart';
 import 'package:goalflow/services/api_service.dart';
+import 'package:goalflow/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -74,16 +76,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        // When user presses back on login, go back to register
-        context.go('/register');
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: AmbientWatercolorBackground(
-          child: SafeArea(
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            // When user presses back on login, go back to register
+            context.go('/register');
+          },
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            body: AmbientWatercolorBackground(
+              child: SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 20.0),
@@ -208,6 +218,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+      ),
       ),
     );
   }

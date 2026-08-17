@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:goalflow/widgets/ambient_watercolor_background.dart';
 import 'package:goalflow/services/api_service.dart';
+import 'package:goalflow/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -802,15 +804,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        _handleBack();
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: AmbientWatercolorBackground(
-          child: SafeArea(
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            _handleBack();
+          },
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            body: AmbientWatercolorBackground(
+              child: SafeArea(
             child: Column(
               children: [
                 const SizedBox(height: 8),
@@ -923,6 +933,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
+      ),
+      ),
       ),
     );
   }
