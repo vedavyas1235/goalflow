@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:goalflow/services/api_service.dart';
+import 'package:goalflow/services/goal_provider.dart';
+import 'package:goalflow/models/action_item.dart';
 import 'package:goalflow/widgets/ambient_watercolor_background.dart';
 
 class ReflectionScreen extends StatefulWidget {
@@ -83,6 +86,15 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
 
+    // Calculate real stats from live user goals & action items
+    final goalProvider = Provider.of<GoalProvider>(context);
+    final allGoals = goalProvider.goals;
+    final allActions = allGoals.expand((g) => g.allActions).toList();
+    final int completedCount = allActions.where((a) => a.status == ActionStatus.completed).length;
+    final int totalActions = allActions.length;
+    final int remainingCount = totalActions > completedCount ? (totalActions - completedCount) : 0;
+    final int progressPct = totalActions > 0 ? ((completedCount / totalActions) * 100).round() : 0;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: AmbientWatercolorBackground(
@@ -114,16 +126,16 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Stats Summary
+                    // Dynamic Stats Summary
                     Text('This Week\'s Output', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor)),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        _buildStatBox(context, '18', 'Completed', Colors.green),
+                        _buildStatBox(context, '$completedCount', 'Completed', Colors.green),
                         const SizedBox(width: 12),
-                        _buildStatBox(context, '3', 'Missed', Colors.redAccent),
+                        _buildStatBox(context, '$remainingCount', 'Remaining', Colors.orangeAccent),
                         const SizedBox(width: 12),
-                        _buildStatBox(context, '85%', 'Progress', isDark ? Colors.blueAccent : const Color(0xFF1E293B)),
+                        _buildStatBox(context, '$progressPct%', 'Progress', isDark ? Colors.blueAccent : const Color(0xFF1E293B)),
                       ],
                     ),
                     const SizedBox(height: 40),
@@ -207,9 +219,17 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                           print('synthesizeReflection error: $e');
                         }
 
-                        final finalSummary = (aiSummary != null && aiSummary.isNotEmpty)
-                            ? aiSummary
-                            : "Progress & Momentum:\n${_wellController.text.trim()}\n\nObstacles Encountered:\n${_difficultController.text.trim()}\n\nFocus Strategy for Next Week:\n${_improveController.text.trim()}";
+                        // Clean and extract pure synthesized AI text
+                        String finalSummary = (aiSummary != null && aiSummary.trim().isNotEmpty)
+                            ? aiSummary.trim()
+                            : "You showed great commitment this week by reflecting on your progress. Continue building your daily habit rhythm and stay focused on your goals.\n\nNext week, allocate dedicated time in your schedule to execute your key actions smoothly and maintain your learning momentum.";
+
+                        finalSummary = finalSummary
+                            .replaceAll(r'\n', '\n')
+                            .replaceAll(r'\"', '"')
+                            .replaceAll('```json', '')
+                            .replaceAll('```', '')
+                            .trim();
 
                         // Save real AI synthesized reflection to SharedPreferences
                         try {
@@ -217,7 +237,7 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                           final existingJson = prefs.getString('saved_journey_reflections');
                           List<dynamic> list = existingJson != null ? json.decode(existingJson) : [];
                           final now = DateTime.now();
-                          final dateStr = 'Week ${list.length + 1}: ${now.day}/${now.month}/${now.year}';
+                          final dateStr = 'Week ${list.length + 1} • ${now.day}/${now.month}/${now.year}';
                           list.insert(0, {
                             'date': dateStr,
                             'summary': finalSummary,

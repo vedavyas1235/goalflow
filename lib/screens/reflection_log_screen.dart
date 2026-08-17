@@ -29,9 +29,39 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
       final jsonStr = prefs.getString('saved_journey_reflections');
       if (jsonStr != null) {
         final List<dynamic> raw = json.decode(jsonStr);
-        _realLogs = raw.map((item) => {
-          'date': item['date']?.toString() ?? 'Weekly Reflection',
-          'summary': item['summary']?.toString() ?? '',
+        _realLogs = raw.map((item) {
+          String summary = item['summary']?.toString() ?? '';
+          
+          // Unescape newlines and quotes
+          summary = summary.replaceAll(r'\n', '\n').replaceAll(r'\"', '"');
+
+          // If JSON object format leaked, extract the inner summary
+          if (summary.trim().startsWith('{') && summary.contains('"summary"')) {
+            try {
+              final parsed = json.decode(summary);
+              if (parsed is Map && parsed['summary'] != null) {
+                summary = parsed['summary'].toString();
+              }
+            } catch (_) {}
+          }
+
+          // If it was the old raw questionnaire fallback, clean it up into a clean summary
+          if (summary.contains('Progress & Momentum:')) {
+            final lines = summary
+                .replaceAll('Progress & Momentum:', '')
+                .replaceAll('Obstacles Encountered:', '')
+                .replaceAll('Focus Strategy for Next Week:', '')
+                .split('\n')
+                .map((l) => l.trim())
+                .where((l) => l.isNotEmpty)
+                .join(' ');
+            summary = 'Reflection Insights: $lines';
+          }
+
+          return {
+            'date': item['date']?.toString() ?? 'Weekly Reflection',
+            'summary': summary.trim(),
+          };
         }).toList();
       }
     } catch (e) {
@@ -39,6 +69,23 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
     }
     if (mounted) {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteLog(int index) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString('saved_journey_reflections');
+      if (jsonStr != null) {
+        List<dynamic> list = json.decode(jsonStr);
+        if (index >= 0 && index < list.length) {
+          list.removeAt(index);
+          await prefs.setString('saved_journey_reflections', json.encode(list));
+          await _loadRealLogs();
+        }
+      }
+    } catch (e) {
+      print('Error deleting log: $e');
     }
   }
 
@@ -170,7 +217,12 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
                             itemCount: currentLogs.length,
                             itemBuilder: (context, index) {
                               final log = currentLogs[index];
-                              return _buildLogCard(context, log['date'] ?? 'Weekly Reflection', log['summary'] ?? '');
+                              return _buildLogCard(
+                                context, 
+                                index, 
+                                log['date'] ?? 'Weekly Reflection', 
+                                log['summary'] ?? ''
+                              );
                             },
                           ),
               ),
@@ -181,7 +233,7 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
     );
   }
 
-  Widget _buildLogCard(BuildContext context, String date, String summary) {
+  Widget _buildLogCard(BuildContext context, int index, String date, String summary) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF1E293B);
 
@@ -224,9 +276,37 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
                   ),
                 ),
               ),
+              IconButton(
+                icon: Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent.withOpacity(0.7)),
+                tooltip: 'Delete Log',
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      title: Text('Delete Reflection?', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
+                      content: Text('Are you sure you want to remove this reflection log?', style: TextStyle(color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            _deleteLog(index);
+                          },
+                          child: const Text('Delete', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             summary,
             style: TextStyle(
