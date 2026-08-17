@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  password        String?
+  profileImageUrl String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  goals           Goal[]
+  blueprints      GoalBlueprint[]
+}
+
+model Goal {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  category    String
+  priority    String    @default("medium") // low, medium, high
+  startDate   DateTime
+  targetDate  DateTime?
+  routine     Json?     // stores Routine object { type, daysOfWeek, preferredTime, durationPerSession }
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  milestones  Milestone[]
+  actions     ActionItem[]
+}
+
+model Milestone {
+  id        String   @id @default(uuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  actions   ActionItem[]
+}
+
+model ActionItem {
+  id                String    @id @default(uuid())
+  title             String
+  description       String?   @default("")
+  dueDate           DateTime?
+  preferredTime     String?
+  estimatedDuration Int?     
+  priority          String    @default("medium") 
+  status            String    @default("upcoming") // upcoming, inProgress, completed, missed, skipped
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  goalId            String
+  goal              Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  
+  milestoneId       String?
+  milestone         Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+}
+
+// Stores the AI generated 3-month plan that drips weekly
+model GoalBlueprint {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullJson    Json     // The complete AI blueprint structure
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
