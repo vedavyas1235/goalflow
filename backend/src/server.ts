@@ -30,11 +30,16 @@ app.get('/api', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', name: 'GoalFlow Backend API', version: '1.0.0' });
 });
 
-// API Routes
+// API Routes (Mounted on both /api and root for any Vercel rewrite configuration)
 app.use('/api/auth', authRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/actions', goalRoutes); // Action endpoints (PATCH /api/actions/:id)
 app.use('/api/ai', aiRoutes);
+
+app.use('/auth', authRoutes);
+app.use('/goals', goalRoutes);
+app.use('/actions', goalRoutes);
+app.use('/ai', aiRoutes);
 
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.listen(port, () => {
