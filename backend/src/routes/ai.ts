@@ -12,7 +12,7 @@ async function callOpenRouter(prompt: string) {
     headers: {
       "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "http://localhost:3000",
+      "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.APP_URL || "https://goalflow-opal.vercel.app"),
       "X-Title": "GoalFlow",
     },
     body: JSON.stringify({
