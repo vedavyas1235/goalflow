@@ -339,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             ),
                             const SizedBox(height: 6),
                             const Text(
-                              'Sign in to access your personalized 30-day roadmap',
+                              'Sign in to access your personalized AI roadmap',
                               style: TextStyle(
                                 fontSize: 13.5,
                                 color: Color(0xFF64748B),
@@ -356,7 +356,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               runSpacing: 6,
                               children: [
                                 _buildFeaturePill(Icons.bolt_rounded, 'AI Engine'),
-                                _buildFeaturePill(Icons.track_changes_rounded, '30-Day Plan'),
+                                _buildFeaturePill(Icons.track_changes_rounded, 'Smart Goals'),
                                 _buildFeaturePill(Icons.shield_outlined, 'Private'),
                               ],
                             ),
