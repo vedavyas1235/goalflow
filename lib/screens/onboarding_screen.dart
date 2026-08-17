@@ -27,6 +27,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late final FocusNode _nameFocusNode;
   late final FocusNode _mainObjectiveFocusNode;
   late final FocusNode _firstGoalTitleFocusNode;
+  late final FocusNode _detailedDescriptionFocusNode;
+  late final FocusNode _workingFrequencyFocusNode;
+  late final FocusNode _constraintsFocusNode;
 
   // Onboarding Data State
   String timeframe = '3 Months';
@@ -100,6 +103,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _nameFocusNode = FocusNode()..addListener(() => setState(() {}));
     _mainObjectiveFocusNode = FocusNode()..addListener(() => setState(() {}));
     _firstGoalTitleFocusNode = FocusNode()..addListener(() => setState(() {}));
+    _detailedDescriptionFocusNode = FocusNode()..addListener(() => setState(() {}));
+    _workingFrequencyFocusNode = FocusNode()..addListener(() => setState(() {}));
+    _constraintsFocusNode = FocusNode()..addListener(() => setState(() {}));
 
     _loadDraft();
   }
@@ -173,6 +179,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _nameFocusNode.dispose();
     _mainObjectiveFocusNode.dispose();
     _firstGoalTitleFocusNode.dispose();
+    _detailedDescriptionFocusNode.dispose();
+    _workingFrequencyFocusNode.dispose();
+    _constraintsFocusNode.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -181,14 +190,54 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // Validation Logic
     if (_currentIndex == 0 && (_nameController.text.trim().isEmpty || _mainObjectiveController.text.trim().isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in your Name and Main Objective.'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Expanded(child: Text('Please fill in your Name and Main Objective.')),
+            ],
+          ),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
       );
       return;
     }
     
     if (_currentIndex == 1 && _firstGoalTitleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your Goal Title.'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Expanded(child: Text('Please enter your Goal Title.')),
+            ],
+          ),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      );
+      return;
+    }
+
+    if (_currentIndex == 2 && _detailedDescriptionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Expanded(child: Text('Please provide a detailed description of your goal motivations.')),
+            ],
+          ),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
       );
       return;
     }
@@ -1002,219 +1051,883 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildDetailedDescriptionStep() {
-    return _buildCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Icon(Icons.description_rounded, size: 48, color: Color(0xFF1E293B)),
-          const SizedBox(height: 12),
-          const Text(
-            'Detailed Description',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Why do you want to achieve this? What is the core motivation behind this goal?',
-            style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          
-          TextFormField(
-            controller: _detailedDescriptionController,
-            maxLines: 6,
-            decoration: _inputDeco('Tell us more about your motivations...'),
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1E293B), height: 1.4),
-            onChanged: (_) => _saveDraft(),
-          ),
-        ],
+    final isFocused = _detailedDescriptionFocusNode.hasFocus;
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      child: Container(
+        padding: const EdgeInsets.all(26.0),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withOpacity(0.95), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withOpacity(0.06),
+              blurRadius: 36,
+              offset: const Offset(0, 14),
+            ),
+            BoxShadow(
+              color: const Color(0xFF6366F1).withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Badge & Icon
+            Center(
+              child: Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFEC4899)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.psychology_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Step badge
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'STEP 3 OF 5 • CORE MOTIVATION',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF4F46E5),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            const Text(
+              'Detailed Description',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Why do you want to achieve this? Deep context allows AI to structure accurate daily habits.',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: Color(0xFF64748B),
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            // Large Multi-line Field Tile
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: isFocused ? const Color(0xFF6366F1) : const Color(0xFFE2E8F0),
+                  width: isFocused ? 1.8 : 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isFocused
+                        ? const Color(0xFF6366F1).withOpacity(0.12)
+                        : const Color(0xFF0F172A).withOpacity(0.03),
+                    blurRadius: isFocused ? 16 : 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(18.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: isFocused ? const Color(0xFFEEF2FF) : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isFocused ? const Color(0xFFC7D2FE) : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.edit_note_rounded,
+                            color: isFocused ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'WHY IS THIS GOAL ESSENTIAL TO YOU?',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: isFocused ? const Color(0xFF6366F1) : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _detailedDescriptionController,
+                      focusNode: _detailedDescriptionFocusNode,
+                      maxLines: 6,
+                      minLines: 4,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF0F172A),
+                        height: 1.45,
+                      ),
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        border: InputBorder.none,
+                        hintText: 'Share your background, what success looks like, and what drives you to accomplish this milestone...',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFFCBD5E1),
+                          height: 1.4,
+                        ),
+                      ),
+                      onChanged: (_) => _saveDraft(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Tip note
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.lightbulb_outline_rounded, size: 16, color: Color(0xFFF59E0B)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Required: AI uses these details to generate targeted milestones.',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildRoutineStep() {
-    return _buildCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Icon(Icons.calendar_month_rounded, size: 48, color: Color(0xFF1E293B)),
-          const SizedBox(height: 12),
-          const Text(
-            'Your Schedule & Routine',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Define when and how long you focus.',
-            style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: preferredTime,
-                  decoration: _inputDeco('Preferred Time'),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                  dropdownColor: Colors.white,
-                  items: ['Morning', 'Afternoon', 'Evening', 'Custom']
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => preferredTime = val);
-                      _saveDraft();
-                    }
-                  },
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      child: Container(
+        padding: const EdgeInsets.all(26.0),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withOpacity(0.95), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withOpacity(0.06),
+              blurRadius: 36,
+              offset: const Offset(0, 14),
+            ),
+            BoxShadow(
+              color: const Color(0xFF6366F1).withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Badge & Icon
+            Center(
+              child: Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFEC4899)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.alarm_on_rounded,
+                  color: Colors.white,
+                  size: 34,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: targetDuration,
-                  decoration: _inputDeco('Duration'),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-                  dropdownColor: Colors.white,
-                  items: ['15 mins', '30 mins', '45 mins', '60 mins', 'Custom']
-                      .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => targetDuration = val);
-                      _saveDraft();
-                    }
-                  },
+            ),
+            const SizedBox(height: 16),
+            
+            // Step badge
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Text(
+                  'STEP 4 OF 5 • SCHEDULE & ROUTINE',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF4F46E5),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            const Text(
+              'Your Schedule & Routine',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Define when and how long you focus so AI schedules realistic habits.',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: Color(0xFF64748B),
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            
+            // Time of Day & Duration Cards (Side by side)
+            Row(
+              children: [
+                // Preferred Time
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0F172A).withOpacity(0.02),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.wb_sunny_outlined, size: 14, color: Color(0xFF6366F1)),
+                            SizedBox(width: 5),
+                            Text(
+                              'TIME OF DAY',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF94A3B8),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: preferredTime,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B), size: 18),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            dropdownColor: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            items: ['Morning', 'Afternoon', 'Evening', 'Custom']
+                                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() => preferredTime = val);
+                                _saveDraft();
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                // Duration
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0F172A).withOpacity(0.02),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.timer_outlined, size: 14, color: Color(0xFF10B981)),
+                            SizedBox(width: 5),
+                            Text(
+                              'DURATION',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF94A3B8),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: targetDuration,
+                            isExpanded: true,
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B), size: 18),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                            dropdownColor: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            items: ['15 mins', '30 mins', '45 mins', '60 mins', 'Custom']
+                                .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                                .toList(),
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() => targetDuration = val);
+                                _saveDraft();
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (preferredTime == 'Custom') ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTimePickerField('Start Time', customStartTime, () {
+                      _pickTime(context, customStartTime, (time) => setState(() => customStartTime = time));
+                    }),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTimePickerField('End Time', customEndTime, () {
+                      _pickTime(context, customEndTime, (time) => setState(() => customEndTime = time));
+                    }),
+                  ),
+                ],
               ),
             ],
-          ),
-          if (preferredTime == 'Custom') ...[
+            if (targetDuration == 'Custom') ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(child: _buildSmallNumberInput('Hours')),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildSmallNumberInput('Mins')),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
-            Row(
+
+            // Working Frequency Field Tile
+            _buildFieldTile(
+              label: 'Target Frequency',
+              controller: _workingFrequencyController,
+              focusNode: _workingFrequencyFocusNode,
+              icon: Icons.repeat_rounded,
+              hintText: 'e.g. 3 times a week',
+            ),
+            const SizedBox(height: 22),
+
+            // Preferred Days Header
+            const Row(
               children: [
-                Expanded(
-                  child: _buildTimePickerField('Start Time', customStartTime, () {
-                    _pickTime(context, customStartTime, (time) => setState(() => customStartTime = time));
-                  }),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildTimePickerField('End Time', customEndTime, () {
-                    _pickTime(context, customEndTime, (time) => setState(() => customEndTime = time));
-                  }),
+                Icon(Icons.date_range_outlined, size: 16, color: Color(0xFF6366F1)),
+                SizedBox(width: 6),
+                Text(
+                  'ACTIVE DAYS OF THE WEEK',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ],
             ),
-          ],
-          if (targetDuration == 'Custom') ...[
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _buildSmallNumberInput('Hours')),
-                const SizedBox(width: 12),
-                Expanded(child: _buildSmallNumberInput('Mins')),
-              ],
+            const SizedBox(height: 12),
+
+            // Day Selector Chips
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) {
+                final isSelected = preferredDays.contains(day);
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isSelected ? preferredDays.remove(day) : preferredDays.add(day);
+                    });
+                    _saveDraft();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? const LinearGradient(
+                              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                            )
+                          : null,
+                      color: isSelected ? null : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0),
+                        width: isSelected ? 1.8 : 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isSelected
+                              ? const Color(0xFF4F46E5).withOpacity(0.18)
+                              : const Color(0xFF0F172A).withOpacity(0.02),
+                          blurRadius: isSelected ? 10 : 4,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ],
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _workingFrequencyController,
-            decoration: _inputDeco('Frequency (e.g. 3 times a week)', icon: Icons.repeat_rounded),
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-            onChanged: (_) => _saveDraft(),
-          ),
-          const SizedBox(height: 18),
-          const Text('Preferred Days:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) {
-              final isSelected = preferredDays.contains(day);
-              return FilterChip(
-                label: Text(day, style: TextStyle(color: isSelected ? Colors.white : const Color(0xFF1E293B), fontWeight: FontWeight.bold)),
-                selected: isSelected,
-                selectedColor: const Color(0xFF1E293B),
-                backgroundColor: Colors.white.withOpacity(0.6),
-                checkmarkColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                side: BorderSide(color: isSelected ? const Color(0xFF1E293B) : Colors.white.withOpacity(0.8)),
-                onSelected: (selected) {
-                  setState(() {
-                    selected ? preferredDays.add(day) : preferredDays.remove(day);
-                  });
-                  _saveDraft();
-                },
-              );
-            }).toList(),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildPersonalizationStep() {
-    return _buildCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Icon(Icons.tune_rounded, size: 48, color: Color(0xFF1E293B)),
-          const SizedBox(height: 12),
-          const Text(
-            'Personalization',
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'AI uses these constraints to craft your daily routine.',
-            style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _constraintsController,
-            decoration: _inputDeco('Personal Constraints (e.g. Travel often)', icon: Icons.flight_takeoff_rounded),
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-            onChanged: (_) => _saveDraft(),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: progressStyle,
-            decoration: _inputDeco('Tracking Style', icon: Icons.insights_rounded),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-            dropdownColor: Colors.white,
-            items: ['Strict', 'Flexible']
-                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                .toList(),
-            onChanged: (val) {
-              if (val != null) {
-                setState(() => progressStyle = val);
-                _saveDraft();
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: reminderPref,
-            decoration: _inputDeco('Reminders', icon: Icons.notifications_rounded),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
-            dropdownColor: Colors.white,
-            items: ['Daily Reminders', 'Milestone Only', 'Gentle Nudges']
-                .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                .toList(),
-            onChanged: (val) {
-              if (val != null) {
-                setState(() => reminderPref = val);
-                _saveDraft();
-              }
-            },
-          ),
-        ],
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      child: Container(
+        padding: const EdgeInsets.all(26.0),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.92),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withOpacity(0.95), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withOpacity(0.06),
+              blurRadius: 36,
+              offset: const Offset(0, 14),
+            ),
+            BoxShadow(
+              color: const Color(0xFF6366F1).withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Badge & Icon
+            Center(
+              child: Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFEC4899)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.tune_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Step badge
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'STEP 5 OF 5 • AI COACH CONFIG',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF4F46E5),
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            const Text(
+              'Personalization',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'AI uses these constraints & accountability styles to craft your ideal roadmap.',
+              style: TextStyle(
+                fontSize: 13.5,
+                color: Color(0xFF64748B),
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            // Personal Constraints Field Tile
+            _buildFieldTile(
+              label: 'Personal Constraints (Optional)',
+              controller: _constraintsController,
+              focusNode: _constraintsFocusNode,
+              icon: Icons.flight_takeoff_rounded,
+              hintText: 'e.g. Travel frequently, free mostly on weekends',
+            ),
+            const SizedBox(height: 20),
+
+            // Tracking Style Section Header
+            const Row(
+              children: [
+                Icon(Icons.insights_rounded, size: 16, color: Color(0xFF6366F1)),
+                SizedBox(width: 6),
+                Text(
+                  'ACCOUNTABILITY STYLE',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Tracking Style Selection Cards (Strict vs Flexible)
+            Row(
+              children: [
+                // Strict Card
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => progressStyle = 'Strict');
+                      _saveDraft();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: progressStyle == 'Strict'
+                            ? const LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1E293B)])
+                            : null,
+                        color: progressStyle == 'Strict' ? null : Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: progressStyle == 'Strict' ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0),
+                          width: progressStyle == 'Strict' ? 1.8 : 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: progressStyle == 'Strict'
+                                ? const Color(0xFF4F46E5).withOpacity(0.18)
+                                : const Color(0xFF0F172A).withOpacity(0.02),
+                            blurRadius: progressStyle == 'Strict' ? 10 : 4,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.gavel_rounded,
+                                size: 18,
+                                color: progressStyle == 'Strict' ? Colors.white : const Color(0xFF4F46E5),
+                              ),
+                              const Spacer(),
+                              if (progressStyle == 'Strict')
+                                const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF10B981)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Strict',
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                              color: progressStyle == 'Strict' ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Rigid discipline, streak lock',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: progressStyle == 'Strict' ? Colors.white.withOpacity(0.7) : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Flexible Card
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => progressStyle = 'Flexible');
+                      _saveDraft();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: progressStyle == 'Flexible'
+                            ? const LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1E293B)])
+                            : null,
+                        color: progressStyle == 'Flexible' ? null : Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: progressStyle == 'Flexible' ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0),
+                          width: progressStyle == 'Flexible' ? 1.8 : 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: progressStyle == 'Flexible'
+                                ? const Color(0xFF4F46E5).withOpacity(0.18)
+                                : const Color(0xFF0F172A).withOpacity(0.02),
+                            blurRadius: progressStyle == 'Flexible' ? 10 : 4,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.spa_rounded,
+                                size: 18,
+                                color: progressStyle == 'Flexible' ? Colors.white : const Color(0xFF10B981),
+                              ),
+                              const Spacer(),
+                              if (progressStyle == 'Flexible')
+                                const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF10B981)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Flexible',
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                              color: progressStyle == 'Flexible' ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Adaptive buffer & pacing',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: progressStyle == 'Flexible' ? Colors.white.withOpacity(0.7) : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Reminders Section Header
+            const Row(
+              children: [
+                Icon(Icons.notifications_outlined, size: 16, color: Color(0xFF6366F1)),
+                SizedBox(width: 6),
+                Text(
+                  'REMINDER CADENCE',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF64748B),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Reminders Dropdown Card
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withOpacity(0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: reminderPref,
+                  isExpanded: true,
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+                  style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                  dropdownColor: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  items: ['Daily Reminders', 'Milestone Only', 'Gentle Nudges']
+                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => reminderPref = val);
+                      _saveDraft();
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
