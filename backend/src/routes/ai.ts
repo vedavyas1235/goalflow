@@ -4,48 +4,27 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-// Helper to call OpenRouter with multi-model fallback and fast timeout
-async function callOpenRouter(prompt: string): Promise<string> {
+// Helper to call OpenRouter
+async function callOpenRouter(prompt: string) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured");
-
-  const models = [
-    "google/gemma-2-9b-it:free",
-    "cohere/north-mini-code:free"
-  ];
-
-  for (const model of models) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3800);
-
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.APP_URL || "https://goalflow-opal.vercel.app"),
-          "X-Title": "GoalFlow",
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 1000,
-          temperature: 0.7
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      const data: any = await response.json();
-      if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
-        return data.choices[0].message.content;
-      }
-    } catch (err) {
-      console.warn(`[OpenRouter] Model ${model} failed or timed out:`, err);
-    }
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.APP_URL || "https://goalflow-opal.vercel.app"),
+      "X-Title": "GoalFlow",
+    },
+    body: JSON.stringify({
+      model: "cohere/north-mini-code:free",
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  const data = await response.json();
+  if (data.choices && data.choices.length > 0) {
+    return data.choices[0].message.content;
   }
-  throw new Error("All AI models timed out or failed");
+  throw new Error("Invalid response from OpenRouter: " + JSON.stringify(data));
 }
 
 // Background function to generate the massive 30-day blueprint
