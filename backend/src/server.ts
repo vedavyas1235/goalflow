@@ -41,6 +41,12 @@ app.use('/goals', goalRoutes);
 app.use('/actions', goalRoutes);
 app.use('/ai', aiRoutes);
 
+// Global error handler
+app.use((err: any, req: Request, res: Response, next: any) => {
+  console.error('Express Error:', err);
+  res.status(500).json({ error: 'Internal Server Error', message: err?.message || String(err) });
+});
+
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
