@@ -4,27 +4,47 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-// Helper to call OpenRouter
-async function callOpenRouter(prompt: string) {
+// Helper to call OpenRouter with multi-model fallback and timeout
+async function callOpenRouter(prompt: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.APP_URL || "https://goalflow-opal.vercel.app"),
-      "X-Title": "GoalFlow",
-    },
-    body: JSON.stringify({
-      model: "cohere/north-mini-code:free",
-      messages: [{ role: "user", content: prompt }]
-    })
-  });
-  const data = await response.json();
-  if (data.choices && data.choices.length > 0) {
-    return data.choices[0].message.content;
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured");
+
+  const models = [
+    "google/gemma-2-9b-it:free",
+    "cohere/north-mini-code:free",
+    "meta-llama/llama-3.3-70b-instruct:free"
+  ];
+
+  for (const model of models) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.APP_URL || "https://goalflow-opal.vercel.app"),
+          "X-Title": "GoalFlow",
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{ role: "user", content: prompt }]
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      const data: any = await response.json();
+      if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
+        return data.choices[0].message.content;
+      }
+    } catch (err) {
+      console.warn(`[OpenRouter] Model ${model} failed or timed out:`, err);
+    }
   }
-  throw new Error("Invalid response from OpenRouter: " + JSON.stringify(data));
+  throw new Error("All AI models timed out or failed");
 }
 
 // Background function to generate the massive 30-day blueprint
@@ -178,10 +198,24 @@ Generate exactly 30 structured daily action items for Month 1. Output ONLY a raw
 `;
 
     // 2. Generate both slides and 30-day action plan simultaneously
-    const [rawSlidesText, rawActionsText] = await Promise.all([
-      callOpenRouter(slidesPrompt),
-      callOpenRouter(actionsPrompt)
-    ]);
+    let rawSlidesText = "";
+    let rawActionsText = "";
+    try {
+      const results = await Promise.all([
+        callOpenRouter(slidesPrompt).catch(err => {
+          console.warn("Slides AI generation failed:", err);
+          return "";
+        }),
+        callOpenRouter(actionsPrompt).catch(err => {
+          console.warn("Actions AI generation failed:", err);
+          return "";
+        })
+      ]);
+      rawSlidesText = results[0];
+      rawActionsText = results[1];
+    } catch (err) {
+      console.warn("AI generation batch failed:", err);
+    }
 
     // Parse slides JSON
     let slidesData: any = null;
