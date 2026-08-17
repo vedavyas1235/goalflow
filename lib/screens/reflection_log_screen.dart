@@ -29,40 +29,54 @@ class _ReflectionLogScreenState extends State<ReflectionLogScreen> {
       final jsonStr = prefs.getString('saved_journey_reflections');
       if (jsonStr != null) {
         final List<dynamic> raw = json.decode(jsonStr);
-        _realLogs = raw.map((item) {
+        final List<Map<String, String>> cleanedList = [];
+
+        for (var item in raw) {
           String summary = item['summary']?.toString() ?? '';
           
           // Unescape newlines and quotes
-          summary = summary.replaceAll(r'\n', '\n').replaceAll(r'\"', '"');
+          summary = summary.replaceAll(r'\n', '\n').replaceAll(r'\"', '"').trim();
 
           // If JSON object format leaked, extract the inner summary
-          if (summary.trim().startsWith('{') && summary.contains('"summary"')) {
+          if (summary.startsWith('{') && summary.contains('"summary"')) {
             try {
               final parsed = json.decode(summary);
               if (parsed is Map && parsed['summary'] != null) {
-                summary = parsed['summary'].toString();
+                summary = parsed['summary'].toString().trim();
               }
             } catch (_) {}
           }
 
-          // If it was the old raw questionnaire fallback, clean it up into a clean summary
-          if (summary.contains('Progress & Momentum:')) {
-            final lines = summary
-                .replaceAll('Progress & Momentum:', '')
-                .replaceAll('Obstacles Encountered:', '')
-                .replaceAll('Focus Strategy for Next Week:', '')
-                .split('\n')
-                .map((l) => l.trim())
-                .where((l) => l.isNotEmpty)
-                .join(' ');
-            summary = 'Reflection Insights: $lines';
+          // Completely discard any raw questionnaire fallbacks or non-AI drafts
+          if (summary.contains('Progress & Momentum:') || 
+              summary.contains('Obstacles Encountered:') || 
+              summary.contains('Focus Strategy for Next Week:') ||
+              summary.isEmpty) {
+            continue; // Skip and remove raw unsummarized legacy entries!
           }
 
-          return {
+          cleanedList.add({
             'date': item['date']?.toString() ?? 'Weekly Reflection',
-            'summary': summary.trim(),
-          };
+            'summary': summary,
+          });
+        }
+
+        // Re-index week numbers cleanly (e.g. Week 1, Week 2...) based on genuine AI summaries
+        for (int i = 0; i < cleanedList.length; i++) {
+          final int weekNum = cleanedList.length - i;
+          final datePart = cleanedList[i]['date']!.split('•').last.trim();
+          cleanedList[i]['date'] = 'Week $weekNum • $datePart';
+        }
+
+        _realLogs = cleanedList;
+        
+        // Save cleaned list back to SharedPreferences so raw entries are permanently purged
+        final updatedJsonList = _realLogs.map((log) => {
+          'date': log['date'],
+          'summary': log['summary'],
+          'monthIndex': 0,
         }).toList();
+        await prefs.setString('saved_journey_reflections', json.encode(updatedJsonList));
       }
     } catch (e) {
       print('Error loading reflections: $e');

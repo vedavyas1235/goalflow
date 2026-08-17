@@ -236,6 +236,16 @@ class _ReflectionScreenState extends State<ReflectionScreen> {
                           final prefs = await SharedPreferences.getInstance();
                           final existingJson = prefs.getString('saved_journey_reflections');
                           List<dynamic> list = existingJson != null ? json.decode(existingJson) : [];
+                          
+                          // Discard any raw non-AI legacy entries
+                          list.removeWhere((item) {
+                            final s = item['summary']?.toString() ?? '';
+                            return s.contains('Progress & Momentum:') || 
+                                   s.contains('Obstacles Encountered:') || 
+                                   s.contains('Focus Strategy for Next Week:') ||
+                                   s.trim().isEmpty;
+                          });
+
                           final now = DateTime.now();
                           final dateStr = 'Week ${list.length + 1} • ${now.day}/${now.month}/${now.year}';
                           list.insert(0, {
